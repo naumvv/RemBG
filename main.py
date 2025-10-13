@@ -50,16 +50,20 @@ def remove_background(src_img_path, output_dir):
     after_mem = get_memory_usage_mb()
     after_vram = get_vram_usage_mb()
 
+    elapsed = end_time - start_time
+    ram_delta = after_mem - before_mem
+    vram_delta = after_vram - before_vram
+
     print(f"✅ Saved: {out_path.name}")
-    print(f"⏱ Time elapsed: {end_time - start_time:.2f} sec")
-    print(f"💾 RAM delta: {after_mem - before_mem:.2f} MB (total {after_mem:.2f} MB)")
+    print(f"⏱ Time elapsed: {elapsed:.2f} sec")
+    print(f"💾 RAM delta: {ram_delta:.2f} MB (total {after_mem:.2f} MB)")
     if GPU_AVAILABLE:
-        print(f"🎮 VRAM delta: {after_vram - before_vram:.2f} MB (total {after_vram:.2f} MB)")
+        print(f"🎮 VRAM delta: {vram_delta:.2f} MB (total {after_vram:.2f} MB)")
     else:
         print("🎮 VRAM info: unavailable (no NVIDIA GPU or pynvml not installed)")
     print("-" * 50)
 
-    return out_path
+    return elapsed, ram_delta, vram_delta
 
 
 def process_folder(input_dir, output_dir):
@@ -68,13 +72,37 @@ def process_folder(input_dir, output_dir):
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
+    total_time = 0
+    total_ram = 0
+    total_vram = 0
+    count = 0
+
     for img_path in input_dir.glob("*"):
         if img_path.suffix.lower() not in [".jpg", ".jpeg", ".png", ".webp"]:
             continue
         try:
-            remove_background(img_path, output_dir)
+            elapsed, ram_delta, vram_delta = remove_background(img_path, output_dir)
+            total_time += elapsed
+            total_ram += ram_delta
+            total_vram += vram_delta
+            count += 1
         except Exception as e:
             print(f"❌ Error with {img_path.name}: {e}")
+
+    if count > 0:
+        avg_time = total_time / count
+        avg_ram = total_ram / count
+        avg_vram = total_vram / count if GPU_AVAILABLE else 0
+
+        print("\n📊 ==== SUMMARY ====")
+        print(f"🖼 Processed images: {count}")
+        print(f"⏱ Avg time per image: {avg_time:.2f} sec")
+        print(f"💾 Avg RAM delta: {avg_ram:.2f} MB")
+        if GPU_AVAILABLE:
+            print(f"🎮 Avg VRAM delta: {avg_vram:.2f} MB")
+        else:
+            print("🎮 VRAM info: unavailable (no NVIDIA GPU or pynvml not installed)")
+        print("====================\n")
 
 
 def main():
