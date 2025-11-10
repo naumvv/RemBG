@@ -6,6 +6,11 @@ import psutil
 import os
 import time
 import math
+from rembg.sessions import sessions_class
+import onnxruntime as ort
+from typing import Optional, Type
+from rembg.sessions.base import BaseSession
+
 
 try:
     import pynvml
@@ -53,9 +58,21 @@ def remove_background(src_img_path, output_dir):
     start_time = time.time()
 
     data = Image.open(src_img_path)
+
+    session_class: Optional[Type[BaseSession]] = None
     model_name = "birefnet-general-lite"
-    session = new_session(model_name)
-    img = remove(data, session=session)
+
+    for sc in sessions_class:
+        if sc.name() == model_name:
+            session_class = sc
+            break
+
+    sess_opts = ort.SessionOptions()
+    sess_opts.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_BASIC
+    rembg_session = session_class(model_name, sess_opts)
+
+    # Удаляем фон
+    img = await remove(image, session=rembg_session)
 
     out_path = output_dir / f"{src_img_path.stem}.png"
     img.save(out_path)
