@@ -72,7 +72,7 @@ def remove_background(src_img_path, output_dir):
     rembg_session = session_class(model_name, sess_opts)
 
     # Удаляем фон
-    img = remove(image, session=rembg_session)
+    img = remove(data, session=rembg_session)
 
     out_path = output_dir / f"{src_img_path.stem}.png"
     img.save(out_path)
