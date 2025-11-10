@@ -122,19 +122,21 @@ def process_folder(input_dir, output_dir):
 
     if count > 0:
         # p95 / p99 / max для времени
+        p50_time = percentile(times, 50)
         p95_time = percentile(times, 95)
         p99_time = percentile(times, 99)
         max_time = max(times)
 
         # p95 / p99 / max для RAM Δ
+        p50_ram = percentile(ram_deltas, 50)
         p95_ram = percentile(ram_deltas, 95)
         p99_ram = percentile(ram_deltas, 99)
         max_ram = max(ram_deltas)
 
         print("\n📊 ==== SUMMARY ====")
         print(f"🖼 Processed images: {count}")
-        print(f"⏱ Time per image — p95: {p95_time:.2f}s | p99: {p99_time:.2f}s | max: {max_time:.2f}s")
-        print(f"💾 RAM Δ (MB)     — p95: {p95_ram:.2f} | p99: {p99_ram:.2f} | max: {max_ram:.2f}")
+        print(f"⏱ Time per image — p50 {p50_time:.2f}s | p95: {p95_time:.2f}s | p99: {p99_time:.2f}s | max: {max_time:.2f}s")
+        print(f"💾 RAM Δ (MB)     — p50: {p50_ram:.2f}s | p95: {p95_ram:.2f} | p99: {p99_ram:.2f} | max: {max_ram:.2f}")
 
         if GPU_AVAILABLE:
             p95_vram = percentile(vram_deltas, 95)
